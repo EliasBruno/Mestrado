@@ -35,8 +35,6 @@ char *filename = "fracalMandelbrot_seq.ppm";
 char *comment = "# "; /* comment should start with # */
 
 void Mandelbrot(){
-//void Mandelbrot(){
-
     // printf("age: %s\n", ((struct Data*)arg)->name);
 
     int iX, iY;
@@ -98,6 +96,8 @@ int main()
 
     fractalMandelbrot = fopen(filename, "wb");
     fprintf(fractalMandelbrot, "P6\n %s\n %d\n %d\n %d\n", comment, WIDTH, HEIGHT, RGB_MAX_COLOR_VALUE);
+    clock_t inicio, fim;
+    inicio = clock();
     for (int x = 0; x < HEIGHT; x++)
     {
        for (int z = 0; z < WIDTH; z++)
@@ -122,4 +122,7 @@ int main()
     }
     
     fclose(fractalMandelbrot);
+    double tempo = ((double)(inicio - fim)) / CLOCKS_PER_SEC;
+    printf("\nTime = %f\n", tempo);
+
 }

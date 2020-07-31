@@ -4,19 +4,8 @@
 #include <time.h>
 #include <pthread.h>
 
-mpf_t a, b, c;
-
-FILE *pont_arq;
-int part, res;
-int *linha;
-pthread_t *id_thread;
-#define STR_SIZE 64
-
 struct Data
 {
-    char *name;
-    int begin;
-    int end;
     int *dim;
     int *res;
     int *indice;
@@ -25,27 +14,16 @@ struct Data
 struct params_data{
 	struct Data* data;	
 	int row;
-    int begin;
-    int end;
 };
 
 mpf_t **matrizA;
 mpf_t **matrizB;
-mpf_t **matrizC;
-mpf_t **matrizD;
-
-struct Matrizes
-{
-    char *name;
-    int begin;
-    int end;
-    int dim;
-};
+mpf_t **resultSum;
+mpf_t **resultMultiply;
 
 void set_matriz(mpf_t** matriz, int dim, int valor){
     mpf_t v;
     mpf_init_set_d(v, valor);
-    //Inicializa memória para Matriz A
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
@@ -55,7 +33,7 @@ void set_matriz(mpf_t** matriz, int dim, int valor){
     }
 }
 
-void aloca_memoria_matrizes(int dim){
+void memory_allocation(int dim){
     matrizA = (mpf_t**) malloc(sizeof(mpf_t *) * dim);
     for (int i = 0; i < dim; ++i) {
         matrizA[i] = malloc(sizeof(mpf_t) * dim);
@@ -66,14 +44,14 @@ void aloca_memoria_matrizes(int dim){
         matrizB[i] = malloc(sizeof(mpf_t) * dim);
     }
 
-    matrizC = malloc(sizeof(mpf_t*) * dim);
+    resultSum = malloc(sizeof(mpf_t*) * dim);
     for (int i = 0; i < dim; i++) {
-        matrizC[i] = malloc(sizeof(mpf_t) * dim);
+        resultSum[i] = malloc(sizeof(mpf_t) * dim);
     }
 
-    matrizD = malloc(sizeof(mpf_t*) * dim);
+    resultMultiply = malloc(sizeof(mpf_t*) * dim);
     for (int i = 0; i < dim; i++) {
-        matrizD[i] = malloc(sizeof(mpf_t) * dim);
+        resultMultiply[i] = malloc(sizeof(mpf_t) * dim);
     }
 }
 
@@ -82,30 +60,7 @@ void *worker_thread_sum(void *arg);
 
 int main()
 {
-    //pont_arq = fopen("arquivo2.txt", "w");
-   
-    mpf_init(a);
-    mpf_init(b);
-    mpf_init(c);
     clock_t inicio, fim;
-
-/*    printf("Número de threads: \n");
-    scanf("%d",&numThread);
-    
-    printf("Digite a dimensão da primeira matriz: \n");
-    scanf("%d",&valorA);
-
-    printf("Digite a dimensão da segunda matriz: \n");
-    scanf("%d",&valorB);
-*/
-
-    int numThread;
-    int valorA=4;
-    int valorB;
-
-    mpf_init_set_d(a, valorA);
-    mpf_set_ui(c, 0);
-
     pthread_attr_t attra,attrb;
 
     pthread_attr_init(&attra);
@@ -121,27 +76,26 @@ int main()
 
     *(data->dim) = 4;
     int nthread=2;
-    int* status_t;
-    char** thread_label;
-
-    aloca_memoria_matrizes(*(data->dim));
-
+    
+    memory_allocation(*(data->dim));
+    
     set_matriz(matrizA, *(data->dim), 5);
     set_matriz(matrizB, *(data->dim), 5);
-    set_matriz(matrizC, *(data->dim), 0);
-    set_matriz(matrizD, *(data->dim), 0);
+    set_matriz(resultSum, *(data->dim), 0);
+    set_matriz(resultMultiply, *(data->dim), 0);
     
-
     pthread_t* id_threadS = (pthread_t*)malloc(nthread*sizeof(pthread_t));
     pthread_t* id_threadM = (pthread_t*)malloc(nthread*sizeof(pthread_t));
     
     if(*(data->dim)%nthread == 0) *(data->res) = *(data->dim)/nthread;
 	else *(data->res) = *(data->dim)/nthread + 1;
     
+    inicio = clock();
     struct params_data pdata[nthread];
     
     for (int i = 0; i < nthread; i++)
     {
+        
         pdata[i].row = i;
         pdata[i].data = data;
              
@@ -156,23 +110,36 @@ int main()
         pthread_join(id_threadM[i], NULL);
     }
     
+    FILE *file_sequencial_sum;
+    file_sequencial_sum = fopen("threadSum.txt", "w");
     for(int i = 0 ; i < *(data->dim);i++){
         for (int j = 0; j < *(data->dim); j++)
         {
-          gmp_printf("Valor Soma Matriz C %Ff \n", matrizC[i][j]);
+            //gmp_printf("Valor Soma Matriz C %Ff \n", resultSum[i][j]);
+            gmp_fprintf(file_sequencial_sum, "%Ff", resultSum[i][j]);
+            fprintf(file_sequencial_sum, "%s", ";");
         }
+        fprintf(file_sequencial_sum, "%s", "/");
     }
-
+    
+    FILE *file_thread_multiply;
+    file_thread_multiply = fopen("threadMultiply.txt", "w");
     for(int i = 0 ; i < *(data->dim);i++){
         for (int j = 0; j < *(data->dim); j++)
         {
             for (int k = 0; k < *(data->dim); k++)
             {
-                gmp_printf("Valor Multiplicação Matriz D %Ff \n", matrizD[i][k]);
+                //gmp_printf("Valor Multiplicação Matriz D %Ff \n", resultMultiply[i][k]);
+                gmp_fprintf(file_thread_multiply, "%Ff", resultMultiply[i][k]);
+                fprintf(file_thread_multiply, "%s", ";");
             }
         }
+        fprintf(file_thread_multiply, "%s", "/");
     }
+    double tempo = ((double)(inicio - fim)) / CLOCKS_PER_SEC;
+    printf("\nTime = %f\n", tempo);
 }
+
 
 void *worker_thread_sum(void *arg)
 {
@@ -182,13 +149,13 @@ void *worker_thread_sum(void *arg)
     int _dim = *(data->dim);
     int _res = *(data->res);
     int _indice = pdata->row;
-            
+    
+    //printf("Teste indice %d | %d\n", (_res*_indice), (_res*_indice + _res));
+                    
     for(int i = _res*_indice; (i < _res*_indice + _res) && (i < _dim); i++){
         for (int j = 0; j < _dim; j++)
         {
-            //printf("Teste indice %d | %d\n",i, j);
-            mpf_add(matrizC[i][j], matrizA[i][j], matrizB[i][j]);
-            //gmp_printf("Valor Soma Matriz C %Ff \n", matrizC[i][j]);
+            mpf_add(resultSum[i][j], matrizA[i][j], matrizB[i][j]);
         }
     }
 }
@@ -208,7 +175,7 @@ void *worker_thread_mult(void *arg)
         {
             for (int k = 0; k < _dim; k++)
             {
-                mpf_mul(matrizD[i][j],matrizA[i][k], matrizB[k][i]);
+                mpf_mul(resultMultiply[i][j],matrizA[i][k], matrizB[k][i]);
             }
         }
     }

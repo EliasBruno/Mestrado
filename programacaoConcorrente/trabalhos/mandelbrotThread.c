@@ -1,11 +1,3 @@
-/*
-    Federal University of Maranhão - UFMA
-    Developer: Elias, Bia, Fernando
-    Local: São Luís, MA, Brazil
-    Date: 22/07/2020
-    Description: <>
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -18,30 +10,31 @@
 
 struct Data
 {
-    char *name;
-    int begin;
-    int end;
+    int *dim;
+    int *res;
+    int *indice;
 };
 
-struct Result
-{
-    int interaction[WIDTH][HEIGHT];
-} result;
-int interactionE[WIDTH][HEIGHT];
+struct params_data{
+	struct Data* data;	
+	int row;
+};
+
+int interactionResult[WIDTH][HEIGHT];
 
 static unsigned char color[3];
 FILE *fractalMandelbrot;
-char *filename = "fracalMandelbrot.ppm";
+char *filename = "threadFractalMandelbrot.ppm";
 char *comment = "# "; /* comment should start with # */
 
 void *Mandelbrot(void *arg){
-//void Mandelbrot(){
+    struct params_data* pdata = (struct params_data*)arg;
+    struct Data* data = pdata->data;
 
-    // printf("age: %s\n", ((struct Data*)arg)->name);
-
-    int begin = ((struct Data*) arg)->begin; //Valor 0/499
-    int end = ((struct Data*) arg)->end;//Valor 500/999
-    
+    int _dim = *(data->dim);
+    int _res = *(data->res);
+    int _indice = pdata->row;
+        
     int iX, iY;
 
     double Cx, Cy;
@@ -60,11 +53,10 @@ void *Mandelbrot(void *arg){
 
     int interaction;
     const int maxInteraction = 200;
-
+    
     const double escapeRadius = 2;
     double ER2 = escapeRadius * escapeRadius;
-    
-    for (iY = begin; iY < end; iY++)
+    for(int iY = _res*_indice; (iY < _res*_indice + _res) && (iY < _dim); iY++)
     {
         Cy = CyMin + iY * PixelHEIGHT;
         if (fabs(Cy) < PixelHEIGHT / 2)
@@ -88,41 +80,50 @@ void *Mandelbrot(void *arg){
                 Zx2 = Zx * Zx;
                 Zy2 = Zy * Zy;
             }
-            interactionE[iY][iX] = interaction;
+            interactionResult[iY][iX] = interaction;
             
         }
     }
 
 }
 int main()
-{
-    //Declaração da struct para passar na primeira thread	
-     struct Data *data1 = (struct Data *)malloc(sizeof(struct Data));
-    //Declaração da struct para passar na segunda thread
-     struct Data *data2 = (struct Data *)malloc(sizeof(struct Data));
-    	
-     pthread_t id_a, id_b;
-     pthread_attr_t attra,attrb;
+{    	
+    clock_t inicio, fim;
+    pthread_attr_t attra;
 
-     pthread_attr_init(&attra);
-     pthread_attr_init(&attrb);
+    pthread_attr_init(&attra);
 	
-     pthread_attr_setscope(&attra,PTHREAD_SCOPE_SYSTEM);
-     pthread_attr_setscope(&attrb,PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&attra,PTHREAD_SCOPE_SYSTEM);
  
-    data1->name = "Thread_A";
-    data1->begin = 0;
-    data1->end = 299;
+    struct Data *data = (struct Data *)malloc(sizeof(struct Data));
+	data->indice = (int*)malloc(sizeof(int));
+	data->dim = (int*)malloc(sizeof(int));
+	data->res = (int*)malloc(sizeof(int));
 
-    data2->name = "Thread_B";
-    data2->begin = 300;
-    data2->end = 599;
+    *(data->dim) = HEIGHT;
+    int nthread=2;
+
+    pthread_t* id_thread = (pthread_t*)malloc(nthread*sizeof(pthread_t));
+    if(*(data->dim)%nthread == 0) *(data->res) = *(data->dim)/nthread;
+	else *(data->res) = *(data->dim)/nthread + 1;
+
+    inicio = clock();
+    struct params_data pdata[nthread];
     
-    pthread_create(&id_a,&attra, Mandelbrot, (void*) data1);
-    pthread_create(&id_b,&attrb,Mandelbrot, (void*) data2);
+    for (int i = 0; i < nthread; i++)
+    {
+        
+        pdata[i].row = i;
+        pdata[i].data = data;
+             
+        pthread_create((id_thread+i),&attra, Mandelbrot, &pdata[i]);
+    }
 	
-    pthread_join(id_a, NULL);
-    pthread_join(id_b, NULL);      
+    for (int i = 0; i < nthread; i++)
+    {        
+        pthread_join(id_thread[i], NULL);
+    }
+
     const int maxInteraction = 200;
 
     fractalMandelbrot = fopen(filename, "wb");
@@ -131,7 +132,7 @@ int main()
     {
        for (int z = 0; z < WIDTH; z++)
        { 
-            if (interactionE[x][z] == maxInteraction)
+            if (interactionResult[x][z] == maxInteraction)
             {
                 for (int j = 0; j < 3; j++)
                 {
@@ -151,4 +152,8 @@ int main()
     }
     
     fclose(fractalMandelbrot);
+    
+    double tempo = ((double)(inicio - fim)) / CLOCKS_PER_SEC;
+    printf("\nTime = %f\n", tempo);
+
 }
