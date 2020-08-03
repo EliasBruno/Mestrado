@@ -12,7 +12,6 @@ struct Data
 {
     int *dim;
     int *res;
-    int *indice;
 };
 
 struct params_data{
@@ -96,7 +95,6 @@ int main()
     pthread_attr_setscope(&attra,PTHREAD_SCOPE_SYSTEM);
  
     struct Data *data = (struct Data *)malloc(sizeof(struct Data));
-	data->indice = (int*)malloc(sizeof(int));
 	data->dim = (int*)malloc(sizeof(int));
 	data->res = (int*)malloc(sizeof(int));
 

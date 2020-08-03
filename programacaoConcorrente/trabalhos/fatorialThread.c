@@ -21,11 +21,12 @@ void *func_thread(void *arg);
 
 int main(int argc, char **argv)
 {
+    clock_t inicio, fim;
     int i, length, remainder;
 
     sum = 0; length = VETSIZE / NUMTHREADS; //Divide o tamanho do for pela quantidade de threads
     remainder = VETSIZE % NUMTHREADS;
-
+    inicio = clock();
     for(i=0; i<NUMTHREADS; i++){
         arguments[i].fromidx = i * length;// Passa para a variável o valor como parâmetro
         arguments[i].length = length;
@@ -38,6 +39,8 @@ int main(int argc, char **argv)
     for(i=0; i<NUMTHREADS; i++){
         pthread_join(threads[i], NULL);
     }
+    double tempo = ((double)(inicio - fim)) / CLOCKS_PER_SEC;
+    printf("\nTime = %f\n", tempo);
 
     printf("A soma dos números do vetor é %d\n",sum);
 
