@@ -16,25 +16,30 @@ struct params_data{
 };
 
 mpf_t *vetorA;
-mpf_t *fat;
+mpf_t result;
 
 void set_vetor(mpf_t* vetor, int dim, int valor){
+    mpf_t aux;
+    mpf_init_set_d(aux, valor);
+    
     for (int i = 0; i < dim; i++)
     {
         mpf_init_set_d(vetor[i], valor);
+        //gmp_printf("Valor Soma Vetor D %Ff \n", vetor[i]);
+
     }
 }
 
 void memory_allocation(int dim){
-    vetorA = (mpf_t*) malloc(sizeof(mpf_t *) * dim);
-    fat = (mpf_t*) malloc(sizeof(mpf_t *));
+    vetorA = (mpf_t*) malloc(sizeof(mpf_t *) * dim); 
 }
 
-void *worker_factorial(void *arg);
+void *worker_sum(void *arg);
 
 int main()
 {
    
+    clock_t inicio, fim;
     pthread_attr_t attra;
     
     pthread_attr_init(&attra);
@@ -45,9 +50,12 @@ int main()
 	data->dim = (int*)malloc(sizeof(int));
 	data->res = (int*)malloc(sizeof(int));
 
+    mpf_init(result);
     *(data->dim) = 6;
     int nthread=2;
     memory_allocation(6);
+
+    set_vetor(vetorA, 6, 2);
     
     pthread_t* id_thread = (pthread_t*)malloc(nthread*sizeof(pthread_t));
     //Calculo para identificar as regiões do vetor
@@ -60,7 +68,7 @@ int main()
         pdata[i].row = i;
         pdata[i].data = data;
              
-        pthread_create((id_thread+i),&attra, worker_factorial, &pdata[i]);    
+        pthread_create((id_thread+i),&attra, worker_sum, &pdata[i]);    
     }
 
     for (int i = 0; i < nthread; i++)
@@ -68,11 +76,11 @@ int main()
         pthread_join(id_thread[i], NULL);
     }
 
-    gmp_printf("Valor Soma Vetor D %Ff \n", fat);
+    gmp_printf("Valor Soma Vetor D %Ff \n", result);
    
 }
 
-void *worker_factorial(void *arg)
+void *worker_sum(void *arg)
 {                    
     struct params_data* pdata = (struct params_data*)arg;
     struct Data* data = pdata->data;
@@ -81,14 +89,7 @@ void *worker_factorial(void *arg)
     int _res = *(data->res);
     int _indice = pdata->row;
 
-    mpf_t aux;
-    mpf_init_set_d(aux,1);
-    mpf_t n;
-    mpf_init_set_d(n, _dim);
-    mpf_init_set_d(*fat, 1);
-
-    for(*fat; mpf_cmp(n, aux); mpf_sub(n,n,aux)){    
-        mpf_mul(*fat, *fat, n);
+    for(int i = _res*_indice; (i < _res*_indice + _res) && (i < _dim); i++){
+        mpf_add(result, result, vetorA[i]);
     }
-
 }

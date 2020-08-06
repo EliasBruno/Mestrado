@@ -8,7 +8,6 @@ struct Data
 {
     int *dim;
     int *res;
-    int *indice;
 };
 
 struct params_data{
@@ -70,7 +69,6 @@ int main()
     pthread_attr_setscope(&attrb,PTHREAD_SCOPE_SYSTEM);
 
     struct Data *data = (struct Data *)malloc(sizeof(struct Data));
-	data->indice = (int*)malloc(sizeof(int));
 	data->dim = (int*)malloc(sizeof(int));
 	data->res = (int*)malloc(sizeof(int));
 
@@ -127,12 +125,9 @@ int main()
     for(int i = 0 ; i < *(data->dim);i++){
         for (int j = 0; j < *(data->dim); j++)
         {
-            for (int k = 0; k < *(data->dim); k++)
-            {
-                //gmp_printf("Valor Multiplicação Matriz D %Ff \n", resultMultiply[i][k]);
-                gmp_fprintf(file_thread_multiply, "%Ff", resultMultiply[i][k]);
-                fprintf(file_thread_multiply, "%s", ";");
-            }
+            gmp_printf("Valor Multiplicação Matriz D %Ff \n", resultMultiply[i][j]);
+            gmp_fprintf(file_thread_multiply, "%Ff", resultMultiply[i][j]);
+            fprintf(file_thread_multiply, "%s", ";");
         }
         fprintf(file_thread_multiply, "%s", "/");
     }

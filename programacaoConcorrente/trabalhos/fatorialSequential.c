@@ -1,40 +1,60 @@
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <gmp.h>
+#include <time.h>
 
-#define VETSIZE    5000
+mpf_t *vetorA;
 
-int nums[VETSIZE];
-int sum;
+mpf_t *fat;
 
-void func_thread();
+void set_vetor(mpf_t* vetor, int dim, int valor){
+    //mpf_t v;
+    //mpf_init_set_d(v, valor);
+    for (int i = 0; i < dim; i++)
+    {
+        mpf_init_set_d(vetor[i], valor);
+    }
+}
 
-int main(int argc, char **argv)
+void memory_allocation(int dim){
+    vetorA = (mpf_t*) malloc(sizeof(mpf_t *) * dim);
+    fat = (mpf_t*) malloc(sizeof(mpf_t *));
+}
+
+void worker_factorial(int _dim);
+
+int main()
 {
+   
     clock_t inicio, fim;
-    int i, length, remainder;
+   
+    int dim = 6;
 
-    sum = 0;     
+    memory_allocation(dim);
+   
+    worker_factorial(dim);
+        
     inicio = clock();
- 
-    fatorial();
- 
+
+    gmp_printf("Valor Fatorial %Ff \n", *fat);
+
+   
     double tempo = ((double)(inicio - fim)) / CLOCKS_PER_SEC;
     printf("\nTime = %f\n", tempo);
-
-    printf("A soma dos números do vetor é %d\n",sum);
-
+   
 }
 
+void worker_factorial(int valor)
+{                    
 
-void func_thread(){
-    int i, localsum = 0;
-    
-    for(i=0; i<VETSIZE; i++){
-      //printf("A soma dos números do vetor é %d,%d\n",nums[i],i);
-      localsum += nums[i];      
-    }
-    sum+=localsum;
+  mpf_t aux;
+  mpf_init_set_d(aux,1);
+  mpf_t n;
+  mpf_init_set_d(n, valor);
+  mpf_init_set_d(*fat, 1);
+
+  for(*fat; mpf_cmp(n, aux); mpf_sub(n,n,aux)){    
+    mpf_mul(*fat, *fat, n);
+  }
 }
-
