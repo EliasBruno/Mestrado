@@ -49,13 +49,20 @@ int main()
 {
    
     clock_t inicio, fim;
-   
-    int dim = 4;
+    int m;
+    printf("Digite a dimensão das Matrizes: \n");
+    scanf("%d",&m);
+
+    int v;
+    printf("Digite o valor das posições: \n");
+    scanf("%d",&v);
+
+    int dim = m;
 
     memory_allocation(dim);
 
-    set_matriz(matrizA, dim, 5);
-    set_matriz(matrizB, dim, 5);
+    set_matriz(matrizA, dim, v);
+    set_matriz(matrizB, dim, v);
     set_matriz(matrizC, dim, 0);
     set_matriz(matrizD, dim, 0);
     
