@@ -9,13 +9,13 @@ mpf_t **matrizC;
 mpf_t **matrizD;
 
 void set_matriz(mpf_t** matriz, int dim, int valor){
-    mpf_t v;
-    mpf_init_set_d(v, valor);
+    //mpf_t v;
+    //mpf_init_set_d(v, valor);
     for (int i = 0; i < dim; i++)
     {
         for (int j = 0; j < dim; j++)
         {
-            mpf_init_set(matriz[i][j], v);
+            mpf_init_set_d(matriz[i][j], valor);
         }
     }
 }
