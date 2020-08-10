@@ -16,17 +16,6 @@
 #define HEIGHT 600
 #define RGB_MAX_COLOR_VALUE 255
 
-struct Data
-{
-    char *name;
-    int begin;
-    int end;
-};
-
-struct Result
-{
-    int interaction[WIDTH][HEIGHT];
-} result;
 int interactionE[WIDTH][HEIGHT];
 
 static unsigned char color[3];

@@ -77,7 +77,7 @@ int main()
     for(int i = 0 ; i < dim;i++){
         for (int j = 0; j < dim; j++)
         {
-            gmp_printf("Valor Multiplicação Matriz D %Ff \n", matrizC[i][j]);
+            //gmp_printf("Valor SOMA Multiplicação Matriz C %Ff \n", matrizC[i][j]);
             gmp_fprintf(file_sequencial_sum, "%Ff", matrizC[i][j]);
             fprintf(file_sequencial_sum, "%s", ";");
         }
@@ -91,7 +91,7 @@ int main()
         {
             for (int k = 0; k < dim; k++)
             {
-                gmp_printf("Valor Multiplicação Matriz D %Ff \n", matrizD[i][k]);
+                //gmp_printf("Valor MULTIPLICAÇÃO Matriz D %Ff \n", matrizD[i][k]);
                 gmp_fprintf(file_sequencial_multiply, "%Ff", matrizC[i][j]);
                 fprintf(file_sequencial_multiply, "%s", ";");
             }

@@ -125,7 +125,7 @@ int main()
     for(int i = 0 ; i < *(data->dim);i++){
         for (int j = 0; j < *(data->dim); j++)
         {
-            gmp_printf("Valor Multiplicação Matriz D %Ff \n", resultMultiply[i][j]);
+            //sgmp_printf("Valor Multiplicação Matriz D %Ff \n", resultMultiply[i][j]);
             gmp_fprintf(file_thread_multiply, "%Ff", resultMultiply[i][j]);
             fprintf(file_thread_multiply, "%s", ";");
         }
